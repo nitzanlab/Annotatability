@@ -9,7 +9,7 @@ Annotatability, a method to identify meaningful patterns in single-cell genomics
 
 <!-- Reproducibility -->
 ## Reproducibility
-<h4> For reproducibility of Annotability manuscript, please refer to:<br /> [https://github.com/nitzanlab/Annotatability_notebooks(https://github.com/nitzanlab/Annotatability_notebooks)</h4>
+<h4> For reproducibility of Annotability manuscript, please refer to:<br /> https://github.com/nitzanlab/Annotatability_notebooks</h4>
 
 <!-- Installation -->
 ## Installation

@@ -26,9 +26,6 @@ pip install .
 ## Running the tests
 
 
-
-### Running the gpu only tests 
-
 ```
 conda create -n Annotatability python=3.10
 conda activate Annotatability

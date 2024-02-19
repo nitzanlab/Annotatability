@@ -25,6 +25,11 @@ pip install .
 
 <!-- Tests -->
 
+## How to use
+We strongly recommend utilizing ScanPy [Scanpy](https://scanpy.readthedocs.io/en/stable/) for the analysis of scRNA-seq data. <br />
+Annotatability comprises two code files:<br /> "models.py," which encompasses the training of neural network functions and the generation of the trainability-aware graph.<br />
+"metrics.py," which contains the scoring functions.<br />
+Given an annotated data (of type Anndata) named "adata".
 ## Running the tests
 
 

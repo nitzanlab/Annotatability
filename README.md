@@ -50,7 +50,7 @@ all_conf , all_var = models.probability_list_to_confidence_and_var(prob_list, n_
 adata.obs["var"] = all_var.detach().numpy()
 adata.obs["conf"] = all_conf.detach().numpy()
 ```
-<b> Compute the Aanotation-trainability score</b>
+<b> Compute the annotation-trainability score</b>
 ```
 adata_ranked = metrics.rank_genes_conf_min_counts(adata)
 ```
@@ -60,8 +60,19 @@ adata_ranked.var['conf_score_high'] %annotation-trainability positive associatio
 adata_ranked.var['conf_score_low'] %annotation-trainability negative association score
 ```
 
-For computing the 
+<b> Trainability-aware graph embedding</b> 
+```
+connectivities_graph , distance_graph  = metrics.make_conf_graph(adata.copy(), alpha=0.9 , k=15)
+adata.obsp['connectivities']=sp.csr_matrix(connectivities_graph)
+```
+Note: 'alpha' can be adjusted.<br />
+For visualization (UMAP) of the trainability-aware graph you can use the following functions:
 
+```
+sc.tl.umap(adata)
+sc.pl.umap(adata, color='conf')
+```
+Pay attention that using sc.pp.neighbors(adata) will store the neighbors graph in adata.obsp['connectivities'] instead of the trainability-aware graph.
 ## Running the tests
 
 

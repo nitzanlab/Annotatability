@@ -29,7 +29,28 @@ pip install .
 We strongly recommend utilizing ScanPy [Scanpy](https://scanpy.readthedocs.io/en/stable/) for the analysis of scRNA-seq data. <br />
 Annotatability comprises two code files:<br /> "models.py," which encompasses the training of neural network functions and the generation of the trainability-aware graph.<br />
 "metrics.py," which contains the scoring functions.<br />
-Given an annotated data (of type Anndata) named "adata".
+Imports:
+```
+from Annotatability import metrics, models
+import numpy as np
+import scanpy as sc
+from torch.utils.data import TensorDataset, DataLoader , WeightedRandomSampler
+import torch
+import torch.optim as optim
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+```
+
+Given annotated data (of type Anndata) named "adata", and the annotation "label" we aim to analyze(stores as observation). <br />
+For estimate the confidence and the variability of the annotation for each cell (and store the as observation) we will use the following commands:
+```
+epoch_num=50 %Can be changed
+prob_list = models.follow_training_dyn_neural_net(adata, label_key='label',iterNum=epoch_num)
+all_conf , all_var = models.probability_list_to_confidence_and_var(prob_list, n_obs= adata.n_obs, epoch_num=epoch_num, device=device)
+adata.obs["var"] = all_var.detach().numpy()
+adata.obs["conf"] = all_conf.detach().numpy()
+```
+For computing the 
+
 ## Running the tests
 
 

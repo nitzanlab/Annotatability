@@ -29,7 +29,7 @@ pip install .
 We strongly recommend utilizing ScanPy [Scanpy](https://scanpy.readthedocs.io/en/stable/) for the analysis of scRNA-seq data. <br />
 Annotatability comprises two code files:<br /> "models.py," which encompasses the training of neural network functions and the generation of the trainability-aware graph.<br />
 "metrics.py," which contains the scoring functions.<br />
-Imports:
+<b>Imports</b>:<br />
 ```
 from Annotatability import metrics, models
 import numpy as np
@@ -40,6 +40,7 @@ import torch.optim as optim
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 ```
 
+<b>Train the neural network and calculate the confidence and variability metrics</b><br />
 Given annotated data (of type Anndata) named "adata", and the annotation "label" we aim to analyze(stores as observation). <br />
 For estimate the confidence and the variability of the annotation for each cell (and store the as observation) we will use the following commands:
 ```
@@ -49,6 +50,16 @@ all_conf , all_var = models.probability_list_to_confidence_and_var(prob_list, n_
 adata.obs["var"] = all_var.detach().numpy()
 adata.obs["conf"] = all_conf.detach().numpy()
 ```
+<b> Compute the Aanotation-trainability score</b>
+```
+adata_ranked = metrics.rank_genes_conf_min_counts(adata)
+```
+The results will be stored as variables in:
+```
+adata_ranked.var['conf_score_high'] %annotation-trainability positive association score
+adata_ranked.var['conf_score_low'] %annotation-trainability negative association score
+```
+
 For computing the 
 
 ## Running the tests

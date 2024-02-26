@@ -43,7 +43,7 @@ device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 ```
 
 <b>Train the neural network and calculate the confidence and variability metrics</b><br />
-Given annotated data (of type Anndata) named "adata", and the annotation "label" (stores as observation) we aim to analyze. <br />
+We take as input annotated data (of type Anndata) named “adata”, and the annotation “label” (stores as observation) we aim to analyze.<br />
 To estimate the confidence and variability of the annotation of each cell, we  use the following commands:
 ```
 epoch_num=50 %Can be changed

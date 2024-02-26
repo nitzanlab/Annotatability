@@ -27,8 +27,8 @@ pip install .
 
 ## How to use
 We strongly recommend utilizing ScanPy [Scanpy](https://scanpy.readthedocs.io/en/stable/) for the analysis of scRNA-seq data. <br />
-Annotatability comprises two code files:<br /> "models.py," which encompasses the training of neural network functions and the generation of the trainability-aware graph.<br />
-"metrics.py," which contains the scoring functions.<br />
+Annotatability comprises two code files:<br /> "models.py", which encompasses the training of neural network functions and the generation of the trainability-aware graph.<br />
+"metrics.py", which contains the scoring functions.<br />
 <b>Imports</b>:<br />
 ```
 from Annotatability import metrics, models
@@ -41,8 +41,8 @@ device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 ```
 
 <b>Train the neural network and calculate the confidence and variability metrics</b><br />
-Given annotated data (of type Anndata) named "adata", and the annotation "label" we aim to analyze(stores as observation). <br />
-For estimate the confidence and the variability of the annotation for each cell (and store the as observation) we will use the following commands:
+Given annotated data (of type Anndata) named "adata", and the annotation "label" (stores as observation) we aim to analyze. <br />
+To estimate the confidence and variability of the annotation of each cell, we  use the following commands:
 ```
 epoch_num=50 %Can be changed
 prob_list = models.follow_training_dyn_neural_net(adata, label_key='label',iterNum=epoch_num)
@@ -66,13 +66,13 @@ connectivities_graph , distance_graph  = metrics.make_conf_graph(adata.copy(), a
 adata.obsp['connectivities']=sp.csr_matrix(connectivities_graph)
 ```
 Note: 'alpha' can be adjusted.<br />
-For visualization (UMAP) of the trainability-aware graph you can use the following functions:
+For visualization of the trainability-aware graph you can use the following functions:
 
 ```
 sc.tl.umap(adata)
 sc.pl.umap(adata, color='conf')
 ```
-Pay attention that using sc.pp.neighbors(adata) will store the neighbors graph in adata.obsp['connectivities'] instead of the trainability-aware graph.
+Notice that using sc.pp.neighbors(adata) will store the neighbors graph in adata.obsp['connectivities'] instead of the trainability-aware graph.
 ## Running the tests
 
 

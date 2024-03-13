@@ -97,7 +97,7 @@ def one_hot_encode(labels):
     integer_encoded = label_encoder.fit_transform(values)
 
     # binary encode
-    onehot_encoder = OneHotEncoder(sparse=False)
+    onehot_encoder = OneHotEncoder()
     integer_encoded = integer_encoded.reshape(len(integer_encoded), 1)
     onehot_encoded = onehot_encoder.fit_transform(integer_encoded)
     # invert first example

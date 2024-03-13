@@ -124,13 +124,18 @@ def one_hot_encode_two_labels(label1, label2):
     integer_encoded = label_encoder.fit_transform(values)
     integer_encoded2 = label_encoder.fit_transform(values2)
     # binary encode
-    onehot_encoder = OneHotEncoder(sparse=False)
+    onehot_encoder = OneHotEncoder()
     integer_encoded = integer_encoded.reshape(len(integer_encoded), 1)
     integer_encoded2 = integer_encoded2.reshape(len(integer_encoded2), 1)
     onehot_encoded = onehot_encoder.fit_transform(integer_encoded)
     onehot_encoded2 = onehot_encoder.fit_transform(integer_encoded2)
     # invert first example
     #inverted = label_encoder.inverse_transform([np.argmax(onehot_encoded[0, :])])
+    if is_scipy_cs_sparse(onehot_encoded):
+        onehot_encoded = onehot_encoded.toarray()
+    if is_scipy_cs_sparse(onehot_encoded2):
+        onehot_encoded2 = onehot_encoded2.toarray()
+
     return onehot_encoded, onehot_encoded2, label_encoder
 
 def is_scipy_cs_sparse(matrix):

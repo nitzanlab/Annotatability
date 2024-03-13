@@ -102,6 +102,8 @@ def one_hot_encode(labels):
     onehot_encoded = onehot_encoder.fit_transform(integer_encoded)
     # invert first example
     #inverted = label_encoder.inverse_transform([np.argmax(onehot_encoded[0, :])])
+    if is_scipy_cs_sparse(onehot_encoded):
+        onehot_encoded = onehot_encoded.toarray()
     return onehot_encoded, label_encoder
 
 def one_hot_encode_two_labels(label1, label2):

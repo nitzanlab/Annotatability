@@ -75,6 +75,23 @@ sc.tl.umap(adata)
 sc.pl.umap(adata, color='conf')
 ```
 Notice that using sc.pp.neighbors(adata) will store the neighbors graph in adata.obsp['connectivities'] instead of the trainability-aware graph.
+
+## System requirements
+```
+python (>3.0)
+```
+packages:
+```
+"numpy",
+"scanpy",
+"numba",
+"pandas",
+"scipy",
+"matplotlib",
+"pytest",
+"torch"
+```
+
 ## Running the tests
 
 

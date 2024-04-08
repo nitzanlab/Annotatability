@@ -15,20 +15,19 @@ Annotatability, a method to identify meaningful patterns in single-cell genomics
 
 <!-- Installation -->
 ## Installation
-
 ```sh
 git clone https://github.com/nitzanlab/Annotatability.git
 cd Annotatability
 pip install .
 ```
 <br />
-
+Install time- depends on the installation time of Pytorch, a few minutes on a normal computer.
 <!-- Tests -->
 
 ## How to use
 The code is based on [Scanpy](https://scanpy.readthedocs.io/en/stable/) package. <br />
-An example of the usage of our method is available in the following [tutorial](https://github.com/nitzanlab/Annotatability_notebooks/blob/main/tutorial_retina.ipynb
-).
+An example of the usage of our method is available in the following [tutorial] (https://github.com/nitzanlab/Annotatability_notebooks/blob/main/tutorial_retina.ipynb
+) (runtime of a few minutes with GPU, ~20 minutes without GPU).
 Annotatability comprises two code files:<br /> "models.py", which encompasses the training of neural network functions and the generation of the trainability-aware graph.<br />
 "metrics.py", which contains the scoring functions.<br />
 <b>Imports</b>:<br />

@@ -6,8 +6,6 @@ Annotatability, a method to identify meaningful patterns in single-cell genomics
 <!-- Manuscript -->
 ## Manuscript
 
-<!-- GETTING STARTED -->
-## Getting Started
 
 <!-- Reproducibility -->
 ## Reproducibility

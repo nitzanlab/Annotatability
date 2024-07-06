@@ -2,36 +2,31 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import scanpy as sc
+from scipy.sparse import issparse
 from sklearn.preprocessing import normalize
-from sklearn.metrics import roc_auc_score , pairwise_distances
 import torch
-import scipy.sparse as sp
-from numba import jit
-from numpy import array
-from numpy import argmax
-from torch.utils.data import TensorDataset, DataLoader , WeightedRandomSampler
-import torch.nn as nn
-import torch.nn.functional as F
+from torch.utils.data import TensorDataset, DataLoader, WeightedRandomSampler
 import torch.optim as optim
 import torch.nn as nn
 import torch.nn.functional as F
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 import scipy.sparse as sp
 import random
+from anndata import AnnData
 
-class Net(nn.Module):
-    def __init__(self, input_size, output_size):
+class BaseNet(nn.Module):
+    def __init__(self, layer_sizes):
         """
-        Initializes a feedforward neural network with three fully-connected layers.
+        Initializes a feedforward neural network with variable number of fully-connected layers.
 
         Args:
-            input_size (int): Size of the input layer.
-            output_size (int): Size of the output layer.
+            layer_sizes (list of int): Sizes of each layer including input and output layers.
         """
-        super(Net, self).__init__()
-        self.fc1 = nn.Linear(input_size, int(input_size / 2))
-        self.fc2 = nn.Linear(int(input_size / 2), int(input_size / 4))
-        self.fc3 = nn.Linear(int(input_size / 4), output_size)
+        super(BaseNet, self).__init__()
+        layers = []
+        for i in range(len(layer_sizes) - 1):
+            layers.append(nn.Linear(layer_sizes[i], layer_sizes[i+1]))
+        self.layers = nn.ModuleList(layers)
 
     def forward(self, x):
         """
@@ -43,13 +38,47 @@ class Net(nn.Module):
         Returns:
             torch.Tensor: Output data of shape (batch_size, output_size).
         """
-        x = self.fc1(x)
-        x = F.relu(x)
-        x = self.fc2(x)
-        x = F.relu(x)
-        x = self.fc3(x)
-        output = F.log_softmax(x)
-        return output
+        for layer in self.layers[:-1]:
+            x = F.relu(layer(x))
+        x = self.layers[-1](x)
+        return F.log_softmax(x, dim=1)
+
+class Net(BaseNet):
+    def __init__(self, input_size, output_size):
+        """
+        Initializes a feedforward neural network with three fully-connected layers.
+
+        Args:
+            input_size (int): Size of the input layer.
+            output_size (int): Size of the output layer.
+        """
+        layer_sizes = [input_size, int(input_size / 2), int(input_size / 4), output_size]
+        super(Net, self).__init__(layer_sizes)
+
+class Net4(BaseNet):
+    def __init__(self, input_size, output_size):
+        """
+        Initializes a feedforward neural network with four fully-connected layers.
+
+        Args:
+            input_size (int): Size of the input layer.
+            output_size (int): Size of the output layer.
+        """
+        layer_sizes = [input_size, int(input_size / 2), int(input_size / 4), int(input_size / 8), output_size]
+        super(Net4, self).__init__(layer_sizes)
+
+class Net5(BaseNet):
+    def __init__(self, input_size, output_size):
+        """
+        Initializes a feedforward neural network with five fully-connected layers.
+
+        Args:
+            input_size (int): Size of the input layer.
+            output_size (int): Size of the output layer.
+        """
+        layer_sizes = [input_size, int(input_size / 2), int(input_size / 4), int(input_size / 8), int(input_size / 16), output_size]
+        super(Net5, self).__init__(layer_sizes)
+
 
 def modify_labels(orig_labeles, probability=0.1):
     # Get the list of all possible labels
@@ -77,8 +106,8 @@ def modify_labels(orig_labeles, probability=0.1):
     # Create a DataFrame with the original and modified labels
     df = pd.DataFrame({"label": orig_labeles, "modified_label": modified_labels})
 
+    return df, (np.where(df["label"] != df["modified_label"]))
 
-    return df , (np.where(df["label"] != df["modified_label"]))
 
 def one_hot_encode(labels):
     """
@@ -97,14 +126,13 @@ def one_hot_encode(labels):
     integer_encoded = label_encoder.fit_transform(values)
 
     # binary encode
-    onehot_encoder = OneHotEncoder()
+    onehot_encoder = OneHotEncoder(sparse_output=False)
     integer_encoded = integer_encoded.reshape(len(integer_encoded), 1)
     onehot_encoded = onehot_encoder.fit_transform(integer_encoded)
     # invert first example
-    #inverted = label_encoder.inverse_transform([np.argmax(onehot_encoded[0, :])])
-    if is_scipy_cs_sparse(onehot_encoded):
-        onehot_encoded = onehot_encoded.toarray()
+    # inverted = label_encoder.inverse_transform([np.argmax(onehot_encoded[0, :])])
     return onehot_encoded, label_encoder
+
 
 def one_hot_encode_two_labels(label1, label2):
     """
@@ -124,19 +152,15 @@ def one_hot_encode_two_labels(label1, label2):
     integer_encoded = label_encoder.fit_transform(values)
     integer_encoded2 = label_encoder.fit_transform(values2)
     # binary encode
-    onehot_encoder = OneHotEncoder()
+    onehot_encoder = OneHotEncoder(sparse_output=False)
     integer_encoded = integer_encoded.reshape(len(integer_encoded), 1)
     integer_encoded2 = integer_encoded2.reshape(len(integer_encoded2), 1)
     onehot_encoded = onehot_encoder.fit_transform(integer_encoded)
     onehot_encoded2 = onehot_encoder.fit_transform(integer_encoded2)
     # invert first example
-    #inverted = label_encoder.inverse_transform([np.argmax(onehot_encoded[0, :])])
-    if is_scipy_cs_sparse(onehot_encoded):
-        onehot_encoded = onehot_encoded.toarray()
-    if is_scipy_cs_sparse(onehot_encoded2):
-        onehot_encoded2 = onehot_encoded2.toarray()
-
+    # inverted = label_encoder.inverse_transform([np.argmax(onehot_encoded[0, :])])
     return onehot_encoded, onehot_encoded2, label_encoder
+
 
 def is_scipy_cs_sparse(matrix):
     """
@@ -157,7 +181,7 @@ def is_scipy_cs_sparse(matrix):
 
 
 def follow_training_dyn_neural_net(adata, label_key, iterNum=100, lr=0.001, momentum=0.9,
-                    device='cpu', weighted_sampler=True, batch_size=256):
+                                   device='cpu', weighted_sampler=True, batch_size=256, num_layers=3):
     """
     Initialize and train a neural network on single-cell RNA sequencing data.
 
@@ -189,6 +213,8 @@ def follow_training_dyn_neural_net(adata, label_key, iterNum=100, lr=0.001, mome
 
     batch_size : int, optional (default=256)
         Batch size for training.
+    num_layers : int, optional (default=3)
+        Depth of the neural network. Values alowed=3/4/5
 
     Returns:
     -------
@@ -206,8 +232,14 @@ def follow_training_dyn_neural_net(adata, label_key, iterNum=100, lr=0.001, mome
     - Ensure that the necessary PyTorch and scikit-learn packages are installed.
     """
     one_hot_label, inverted_label = one_hot_encode(adata.obs[label_key])
-    net = Net(adata.X.shape[1], output_size=len(adata.obs[label_key].unique()))
-
+    if num_layers==3:
+        net = Net(adata.X.shape[1], output_size=len(adata.obs[label_key].unique()))
+    elif num_layers == 4:
+            net = Net4(adata.X.shape[1], output_size=len(adata.obs[label_key].unique()))
+    elif num_layers==5:
+        net = Net5(adata.X.shape[1], output_size=len(adata.obs[label_key].unique()))
+    else:
+        raise ("Num_layers should be 3/4/5")
     net.to(device)
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(net.parameters(), lr=lr, momentum=momentum)
@@ -239,7 +271,7 @@ def follow_training_dyn_neural_net(adata, label_key, iterNum=100, lr=0.001, mome
             # Get the inputs; data is a list of [inputs, labels]
             inputs, labels = data
             if device.type != 'cpu':
-                #print('Running with cuda')
+                # print('Running with cuda')
                 inputs, labels = inputs.cuda(), labels.cuda()
 
             # Zero the parameter gradients
@@ -258,10 +290,6 @@ def follow_training_dyn_neural_net(adata, label_key, iterNum=100, lr=0.001, mome
                 running_loss = 0.0
     return prob_loss_list
 
-import numpy as np
-import torch
-from torch.utils.data import WeightedRandomSampler
-from anndata import AnnData
 
 def create_weighted_sampler(adata: AnnData, label_key: str):
     """
@@ -306,7 +334,8 @@ def create_weighted_sampler(adata: AnnData, label_key: str):
 
 def probability_for_confidence(y_pred, y_true):
     """
-    Calculates the probability that the predicted class is correct, given the predicted class probabilities and the true class labels.
+    Calculates the probability that the predicted class is correct, given the predicted class probabilities and the
+    true class labels.
 
     Args:
         y_pred (torch.Tensor): Tensor of shape (batch_size, num_classes) with predicted class probabilities.
@@ -343,7 +372,8 @@ def probability_list_to_confidence_and_var(prob_list, n_obs, epoch_num):
     return confidence, variability
 
 
-def find_cutoff_paramter(adata, label, device='cpu', probability=0.05, percentile=90, epoch_num=50, lr=0.001, weighted_sampler=True, batch_size=256):
+def find_cutoff_paramter(adata, label, device='cpu', probability=0.05, percentile=90, epoch_num=50, lr=0.001,
+                         weighted_sampler=True, batch_size=256, num_layers=3):
     """
     Find cutoff parameters based on modified labels and confidence scores.
 
@@ -361,8 +391,7 @@ def find_cutoff_paramter(adata, label, device='cpu', probability=0.05, percentil
         Percentile for determining cutoff parameters, by default 90.
     epoch_num : int, optional
         Number of epochs for training, by default 50.
-    sampler : torch.utils.data.sampler.Sampler, optional
-        Sampler for training data, by default None.
+    weighted_sampler : Boolean, use weighted sampler or not
 
     Returns
     -------
@@ -374,43 +403,48 @@ def find_cutoff_paramter(adata, label, device='cpu', probability=0.05, percentil
     labels = adata.obs[label]
     df, were_changed = modify_labels(labels, probability=probability)
     one_hot_modified_label, inverted_modified = one_hot_encode(df['modified_label'])
-    adata.obs['modified_label']=df['modified_label']
-    net = Net(adata.X.shape[1], output_size=len(labels.unique()))
+    adata.obs['modified_label'] = df['modified_label']
+    if num_layers==3:
+        net = Net(adata.X.shape[1], output_size=len(labels.unique()))
+    elif num_layers == 4:
+            net = Net4(adata.X.shape[1], output_size=len(labels.unique()))
+    elif num_layers==5:
+        net = Net5(adata.X.shape[1], output_size=len(labels.unique()))
+    else:
+        raise ("Num_layers should be 3/4/5")
+
     net.to(device)
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(net.parameters(), lr=lr, momentum=0.9)
-    
+
     if is_scipy_cs_sparse(adata.X):
         x_data = adata.X.toarray()
     else:
         x_data = np.array(adata.X)
-    
+
     tensor_y_noisy = torch.Tensor(one_hot_modified_label)
 
     tensor_x = torch.Tensor(x_data)  # Transform to torch tensor
-    #tensor_y = torch.Tensor(one_hot_label)
+    # tensor_y = torch.Tensor(one_hot_label)
     tensor_x = tensor_x.to(device)
     tensor_y_noisy = tensor_y_noisy.to(device)
     my_dataset = TensorDataset(tensor_x, tensor_y_noisy)  # Create your dataset
 
-
-
     if weighted_sampler:
         sampler = create_weighted_sampler(adata, 'modified_label')
-        trainloader = torch.utils.data.DataLoader(my_dataset, batch_size=batch_size,
-                                                  sampler=sampler, num_workers=0)
+        trainloader = DataLoader(my_dataset, batch_size=batch_size,
+                                 sampler=sampler, num_workers=0)
     else:
-        trainloader = torch.utils.data.DataLoader(my_dataset, batch_size=batch_size,
-                                                  shuffle=True, num_workers=0)
-    
+        trainloader = DataLoader(my_dataset, batch_size=batch_size,
+                                 shuffle=True, num_workers=0)
+
     prob_loss_list = train_include_noise(net=net, device=device, trainloader=trainloader, criterion=criterion,
                                          optimizer=optimizer, tensor_x=tensor_x,
                                          tensor_y_noisy=tensor_y_noisy, epoch_num=epoch_num)
-    
-    all_conf, all_var = probability_list_to_confidence_and_var(prob_loss_list, n_obs=adata.n_obs, epoch_num=epoch_num)
-    
-    return np.percentile(all_conf[were_changed], percentile), np.percentile(all_var[were_changed], percentile)
 
+    all_conf, all_var = probability_list_to_confidence_and_var(prob_loss_list, n_obs=adata.n_obs, epoch_num=epoch_num)
+
+    return np.percentile(all_conf[were_changed], percentile), np.percentile(all_var[were_changed], percentile)
 
 
 def train_include_noise(net, device, trainloader, criterion, optimizer, tensor_x, tensor_y_noisy, epoch_num=60):
@@ -488,8 +522,8 @@ def train_include_noise(net, device, trainloader, criterion, optimizer, tensor_x
 
 
 def predict_true_labels(adata, label, new_annotation='CorrectedCellType', device='cpu',
-                         high_conf_rank=0.2, epoch_num=100, lr=0.001, momentum=0.9,
-                         batch_size=256):
+                        high_conf_rank=0.2, epoch_num=100, lr=0.001, momentum=0.9,
+                        batch_size=256):
     """
     Predict true labels using a neural network and update the annotation in the AnnData object.
 
@@ -522,20 +556,19 @@ def predict_true_labels(adata, label, new_annotation='CorrectedCellType', device
     bdata = adata.copy()
     cdata = adata.copy()
     labels = bdata.obs[label]
-    #bdata.obs['high_conf'] = pd.Categorical(bdata.obs['conf'] > high_conf_rank)
-    #bdata = bdata[bdata.obs['high_conf'].isin([True])]
+    # bdata.obs['high_conf'] = pd.Categorical(bdata.obs['conf'] > high_conf_rank)
+    # bdata = bdata[bdata.obs['high_conf'].isin([True])]
     bdata = bdata[bdata.obs['conf_binaries'].isin([True])]
     one_hot_label, label_encoder = one_hot_encode(bdata.obs[label])
     net = Net(bdata.X.shape[1], output_size=len(labels.unique()))
     net.to(device)
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(net.parameters(), lr=lr, momentum=momentum)
-    
     if is_scipy_cs_sparse(bdata.X):
         x_data = bdata.X.toarray()
     else:
         x_data = np.array(bdata.X)
-    
+
     tensor_x = torch.Tensor(x_data)  # transform to torch tensor
     tensor_y = torch.Tensor(one_hot_label)
     my_dataset = TensorDataset(tensor_x, tensor_y)  # create your dataset
@@ -543,21 +576,19 @@ def predict_true_labels(adata, label, new_annotation='CorrectedCellType', device
     trainloader = torch.utils.data.DataLoader(my_dataset, batch_size=batch_size,
                                               sampler=sampler, num_workers=2)
     net = train_neural_net(net, device, trainloader, criterion, optimizer, epoch_num=epoch_num)
-    
+
     adata.obs[new_annotation] = adata.obs[label]
     cdata = cdata[cdata.obs['conf_binaries'].isin([False])]
     cdata_tensor = torch.tensor(cdata.X.toarray())
     cdata_tensor = cdata_tensor.to(device)
     net_output = net(cdata_tensor)
     del cdata_tensor
-    
+
     inverted = label_encoder.inverse_transform(np.argmax(net_output.cpu().detach().numpy(), axis=1))
     adata.obs[new_annotation][cdata.obs_names] = inverted
-    
+
     return adata
 
-
-import torch
 
 def train_neural_net(net, device, trainloader, criterion, optimizer, epoch_num=60):
     """
@@ -587,7 +618,7 @@ def train_neural_net(net, device, trainloader, criterion, optimizer, epoch_num=6
             # get the inputs; data is a list of [inputs, labels]
             inputs, labels = data
             if device.type != 'cpu':
-                #print('Running with cuda')
+                # print('Running with cuda')
                 inputs, labels = inputs.cuda(), labels.cuda()
 
             # zero the parameter gradients
@@ -601,20 +632,15 @@ def train_neural_net(net, device, trainloader, criterion, optimizer, epoch_num=6
 
             # print statistics
             running_loss += loss.item()
-            if i % 10 == 1:    # print every 2000 mini-batches
+            if i % 10 == 1:  # print every 2000 mini-batches
                 print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / 10:.3f}')
                 running_loss = 0.0
-    
+
     return net
 
 
-
-def arg_max_labele(y_pred, y_true):
-    prob = torch.exp(y_pred)
-    return torch.sum(prob * y_true, axis=1)
-
 def follow_train_dyn_two_lables(adata, label_one, label_two, iterNum=100, lr=0.001, momentum=0.9,
-                    device='cpu', weighted_sampler=True, batch_size=256):
+                                device='cpu', weighted_sampler=True, batch_size=256):
     """
     Initialize and train a neural network on single-cell RNA sequencing data.
 
@@ -662,7 +688,8 @@ def follow_train_dyn_two_lables(adata, label_one, label_two, iterNum=100, lr=0.0
 
     - Ensure that the necessary PyTorch and scikit-learn packages are installed.
     """
-    one_hot_label_1, one_hot_label_2,  inverted_label = one_hot_encode_two_labels(adata.obs[label_one],adata.obs[label_two])
+    one_hot_label_1, one_hot_label_2, inverted_label = one_hot_encode_two_labels(adata.obs[label_one],
+                                                                                 adata.obs[label_two])
     net = Net(adata.X.shape[1], output_size=len(adata.obs[label_one].unique()))
 
     net.to(device)
@@ -701,7 +728,7 @@ def follow_train_dyn_two_lables(adata, label_one, label_two, iterNum=100, lr=0.0
             # Get the inputs; data is a list of [inputs, labels]
             inputs, labels = data
             if device.type != 'cpu':
-                #print('Running with cuda')
+                # print('Running with cuda')
                 inputs, labels = inputs.cuda(), labels.cuda()
 
             # Zero the parameter gradients
@@ -718,112 +745,5 @@ def follow_train_dyn_two_lables(adata, label_one, label_two, iterNum=100, lr=0.0
             if i % 10 == 1:  # Print every 10 mini-batches
                 print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / 10:.3f}')
                 running_loss = 0.0
-    return prob_loss_list_1 , prob_loss_list_2
+    return prob_loss_list_1, prob_loss_list_2
 
-def get_genes_dynamics(adata, label_key, iterNum=100, lr=0.001, momentum=0.9,
-                    device='cpu', weighted_sampler=True, batch_size=256):
-    """
-    Initialize and train a neural network on single-cell RNA sequencing data.
-
-    This function initializes a neural network, prepares the dataset, and trains
-    the network using stochastic gradient descent.
-
-    Parameters:
-    ----------
-    adata : AnnData
-        Anndata object containing the single-cell RNA sequencing data.
-
-    label_key : str
-        The key in adata.obs where the cell labels are stored.
-
-    iterNum : int, optional (default=100)
-        Number of training iterations (epochs).
-
-    lr : float, optional (default=0.001)
-        Learning rate for the optimizer.
-
-    momentum : float, optional (default=0.9)
-        Momentum for the optimizer.
-
-    device : str, optional (default='cpu')
-        Device for training the neural network ('cpu' or 'cuda' for GPU).
-
-    weighted_sampler : bool, optional (default=True)
-        Whether to use a weighted sampler for class imbalance.
-
-    batch_size : int, optional (default=256)
-        Batch size for training.
-
-    Returns:
-    -------
-    list
-        A list of confidence probability losses during training.
-
-    Notes:
-    ------
-    - This function assumes that you have defined the neural network architecture
-      in a separate module as 'Net'.
-    - 'one_hot_encode' should be a function that encodes labels as one-hot vectors.
-    - 'create_weighted_sampler' should be a function that creates a weighted sampler
-      for handling class imbalance.
-
-    - Ensure that the necessary PyTorch and scikit-learn packages are installed.
-    """
-    one_hot_label, inverted_label = one_hot_encode(adata.obs[label_key])
-    net = Net(adata.X.shape[1], output_size=len(adata.obs[label_key].unique()))
-
-    net.to(device)
-    criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(net.parameters(), lr=lr, momentum=momentum)
-    if is_scipy_cs_sparse(adata.X):
-        x_data = adata.X.toarray()
-    else:
-        x_data = np.array(adata.X)
-    x_data_scaled = x_data.copy()
-    x_data_scaled = normalize(x_data_scaled, axis=0)
-    x_data_scaled = torch.Tensor(x_data_scaled)  # Transform to torch tensor
-    x_data_scaled = x_data_scaled.to(device)
-    tensor_x = torch.Tensor(x_data)  # Transform to torch tensor
-    tensor_y = torch.Tensor(one_hot_label)
-    tensor_x = tensor_x.to(device)
-    tensor_y = tensor_y.to(device)
-    my_dataset = TensorDataset(tensor_x, tensor_y)  # Create your dataset
-    if weighted_sampler:
-        sampler = create_weighted_sampler(adata, label_key)
-        trainloader = torch.utils.data.DataLoader(my_dataset, batch_size=batch_size,
-                                                  sampler=sampler, num_workers=0)
-    else:
-        trainloader = torch.utils.data.DataLoader(my_dataset, batch_size=batch_size,
-                                                  shuffle=True, num_workers=0)
-    prob_loss_list = []
-    gene_score_list = []
-    for epoch in range(iterNum):  # Loop over the dataset multiple times
-        outputs_all = net(tensor_x)
-        prob_all = probability_for_confidence(outputs_all, tensor_y)
-        gene_score = x_data_scaled.T @ prob_all
-        gene_score_list.append((gene_score.cpu().detach().numpy()))
-        prob_loss_list.append((prob_all.cpu().detach().numpy()))
-
-        running_loss = 0.0
-        for i, data in enumerate(trainloader, 0):
-            # Get the inputs; data is a list of [inputs, labels]
-            inputs, labels = data
-            if device.type != 'cpu':
-                #print('Running with cuda')
-                inputs, labels = inputs.cuda(), labels.cuda()
-
-            # Zero the parameter gradients
-            optimizer.zero_grad()
-
-            # Forward + backward + optimize
-            outputs = net(inputs)
-            loss = criterion(outputs, labels)
-            loss.backward()
-            optimizer.step()
-
-            # Print statistics
-            running_loss += loss.item()
-            if i % 10 == 1:  # Print every 10 mini-batches
-                print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / 10:.3f}')
-                running_loss = 0.0
-    return prob_loss_list , gene_score_list

@@ -49,6 +49,28 @@ all_conf , all_var = models.probability_list_to_confidence_and_var(prob_list, n_
 adata.obs["var"] = all_var.detach().numpy()
 adata.obs["conf"] = all_conf.detach().numpy()
 ```
+For 'follow_training_dyn_neural_net' function, we can change the following hyperparameters- <br />
+```
+    iterNum : int, optional (default=100)
+        Number of training iterations (epochs).
+
+    lr : float, optional (default=0.001)
+        Learning rate for the optimizer.
+
+    momentum : float, optional (default=0.9)
+        Momentum for the optimizer.
+
+    device : str, optional (default='cpu')
+        Device for training the neural network ('cpu' or 'cuda' for GPU).
+
+    weighted_sampler : bool, optional (default=True)
+        Whether to use a weighted sampler for class imbalance.
+
+    batch_size : int, optional (default=256)
+        Batch size for training.
+    num_layers : int, optional (default=3)
+        Depth of the neural network. Values alowed=3/4/5
+```
 <b> Compute the annotation-trainability score</b>
 ```
 adata_ranked = metrics.rank_genes_conf_min_counts(adata)

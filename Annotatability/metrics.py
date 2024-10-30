@@ -7,6 +7,7 @@ from sklearn.metrics import  pairwise_distances
 import torch
 import scipy.sparse as sp
 from numba import jit
+from scipy.sparse import issparse
 
 
 def rank_genes_conf(adata, power=1, power_low=1):
@@ -31,6 +32,8 @@ def rank_genes_conf(adata, power=1, power_low=1):
 
     # Normalize gene expression data
     A = scaled_adata.X
+    if issparse(A):
+        A = A.toarray()
     mean = np.mean(A, axis=0)
     A = A - mean
     A = normalize(A, axis=0)
@@ -80,6 +83,8 @@ def rank_genes_conf_min_counts(adata, power=1, power_low=1, min_counts=100):
 
     # Normalize gene expression data
     A = scaled_adata.X
+    if issparse(A):
+        A = A.toarray()
     mean = np.mean(A, axis=0)
     A = A - mean
     A = normalize(A, axis=0)

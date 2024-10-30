@@ -174,7 +174,6 @@ def make_conf_graph(adata, alpha=0.9, k=15):
 
 
 
-
 def distance_matrix_with_conf(distance_m, conf_array, alpha):
     """
     Adjust the distance matrix based on confidence scores.
@@ -193,20 +192,22 @@ def distance_matrix_with_conf(distance_m, conf_array, alpha):
     adjusted_distance_m : np.ndarray
         The adjusted distance matrix incorporating confidence scores.
     """
-    n = len(conf_array)
+    # Precompute mean distances
     mean_distance_ge = np.mean(distance_m)
-    mean_distance_conf = mean_absolute_distance(n)
+    mean_distance_conf = mean_absolute_distance(len(conf_array))
 
-    adjusted_distance_m = np.empty_like(distance_m)
+    # Normalize distance matrix
+    normalized_distance_m = distance_m / mean_distance_ge
 
-    for i in range(n):
-        for j in range(n):
-            adjusted_distance_m[i, j] = (
-                (distance_m[i, j] / mean_distance_ge) * alpha +
-                (1 - alpha) * (np.abs(conf_array[i] - conf_array[j]) / mean_distance_conf)
-            )
+    # Compute confidence difference matrix and normalize
+    conf_diff_matrix = np.abs(conf_array[:, np.newaxis] - conf_array)
+    normalized_conf_diff_matrix = conf_diff_matrix / mean_distance_conf
+
+    # Adjusted distance matrix with alpha blending
+    adjusted_distance_m = alpha * normalized_distance_m + (1 - alpha) * normalized_conf_diff_matrix
 
     return adjusted_distance_m
+
 
 
 
@@ -255,16 +256,13 @@ def mean_absolute_distance(n):
     float
         Mean absolute distance for the given number of elements.
     """
-    total_absolute_distance = 0
-    num_pairs = 0
+    # Total number of pairs
+    num_pairs = n * (n - 1) / 2
 
-    for i in range(n):
-        for j in range(i + 1, n):
-            total_absolute_distance += abs(i - j)
-            num_pairs += 1
+    # Sum of absolute differences for elements from 0 to n-1
+    total_absolute_distance = sum(i * (n - i) for i in range(n))
 
-    mean_absolute_distance = total_absolute_distance / num_pairs
-    return mean_absolute_distance
+    return total_absolute_distance / num_pairs
 
 
 

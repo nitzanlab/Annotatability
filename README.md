@@ -22,7 +22,11 @@ Install time- depends on the installation time of Pytorch, which is a few minute
 
 ## How to use
 The code is based on [Scanpy](https://scanpy.readthedocs.io/en/stable/) package. <br />
-An example of the usage of our method is available in the following [tutorial1]([https://github.com/nitzanlab/Annotatability_notebooks/blob/main/tutorial_retina.ipynb](https://github.com/nitzanlab/Annotatability_notebooks/blob/main/tutorial_retina.ipynb))
+An example of the usage of our method is available in the following [tutorial1](https://github.com/nitzanlab/Annotatability_notebooks/blob/main/tutorial_retina.ipynb)
+
+
+
+[tutorial1]([https://github.com/nitzanlab/Annotatability_notebooks/blob/main/tutorial_retina.ipynb](https://github.com/nitzanlab/Annotatability_notebooks/blob/main/tutorial_retina.ipynb))
 
 
 

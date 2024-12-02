@@ -1,15 +1,17 @@
 # Annotatability
-Annotatability, a method to identify meaningful patterns in single-cell genomics data through annotation-trainability analysis, which estimates annotation congruence using a rich but often overlooked signal, namely the training dynamics of a deep neural network. 
+Annotatability is a method that identifies meaningful patterns in single-cell genomics data through annotation-trainability analysis; It estimates congruence in annotation structure by analyzing the training dynamics of deep neural networks.<br />
+Annotatability can be used to audit and rectify erroneous cell annotations, identify intermediate cell states, delineate complex temporal trajectories along development, characterize cell diversity in diseased tissue, identify disease-related genes, assess treatment effectiveness, and identify rare healthy-like cell populations.
 
 ![workflow](https://github.com/nitzanlab/Annotatability/blob/main/fig1.png?raw=true)
 
 <!-- Manuscript -->
 ## Manuscript
 [Preprint](https://www.biorxiv.org/content/10.1101/2024.04.06.588373v1)
+Karin, J., Mintz, R., Raveh, B. and Nitzan, M., 2024. Interpreting single-cell and spatial omics data using deep networks training dynamics. bioRxiv, 2024-04. Nature Computational Science, Accepted.
 
 <!-- Reproducibility -->
 ## Reproducibility
-<h4> For reproducibility of Annotability manuscript, please refer to:<br /> https://github.com/nitzanlab/Annotatability_notebooks</h4>
+<h4> For reproducibility of the results presented in the Annotability manuscript, please refer to:<br /> https://github.com/nitzanlab/Annotatability_notebooks</h4>
 
 <!-- Installation -->
 ## Installation
@@ -17,14 +19,13 @@ Annotatability, a method to identify meaningful patterns in single-cell genomics
 pip install Annotatability
 ```
 <br />
-Install time- depends on the installation time of Pytorch, which is a few minutes on a normal computer.
 <!-- Tests -->
 
 ## How to use
 The code is based on [Scanpy](https://scanpy.readthedocs.io/en/stable/) package. <br />
-An example of the usage of our method is available in the following [tutorial1](https://github.com/nitzanlab/Annotatability_notebooks/blob/main/tutorial_retina.ipynb) (runtime of a few minutes with GPU, ~20 minutes without GPU)- finding erroneous annotations and intermediate cell states in retina bipolar cells, or [tutorial2](https://github.com/nitzanlab/Annotatability_notebooks/blob/main/tutorial_covid.ipynb)  - analysis of case-control dataset of COVID-19
-Annotatability comprises two code files:<br /> "models.py", which encompasses the training of neural network functions and the generation of the trainability-aware graph.<br />
-"metrics.py", which contains the scoring functions.<br />
+An example of the usage of our method is available in the following [tutorial1](https://github.com/nitzanlab/Annotatability_notebooks/blob/main/tutorial_retina.ipynb) (runtime of a few minutes with GPU, ~20 minutes without GPU)- finding erroneous annotations and intermediate cell states in retina bipolar cells, or [tutorial2](https://github.com/nitzanlab/Annotatability_notebooks/blob/main/tutorial_covid.ipynb)  - analysis of case-control dataset of COVID-19. <br />
+Annotatability comprises two code files:<br /> models.py, which encompasses the training of neural network functions and the generation of the trainability-aware graph.<br />
+metrics.py, which contains the scoring functions.<br />
 <b>Imports</b>:<br />
 ```
 from Annotatability import metrics, models

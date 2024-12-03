@@ -85,7 +85,7 @@ connectivities_graph , distance_graph  = metrics.make_conf_graph(adata.copy(), a
 adata.obsp['connectivities']=sp.csr_matrix(connectivities_graph)
 ```
 Note: 'alpha' can be adjusted.<br />
-For visualization of the trainability-aware graph you can use the following functions:
+To visualize of the trainability-aware graph, use the following functions:
 
 ```
 sc.tl.umap(adata)

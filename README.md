@@ -22,9 +22,8 @@ pip install Annotatability
 <!-- Tests -->
 
 ## How to use
-The code is based on [Scanpy](https://scanpy.readthedocs.io/en/stable/) package. <br />
-An example of the usage of our method is available in the following [tutorial1](https://github.com/nitzanlab/Annotatability_notebooks/blob/main/tutorial_retina.ipynb) (runtime of a few minutes with GPU, ~20 minutes without GPU)- finding erroneous annotations and intermediate cell states in retina bipolar cells, or [tutorial2](https://github.com/nitzanlab/Annotatability_notebooks/blob/main/tutorial_covid.ipynb)  - analysis of case-control dataset of COVID-19. <br />
-Annotatability comprises two code files:<br /> models.py, which encompasses the training of neural network functions and the generation of the trainability-aware graph.<br />
+Examples of the usage of our method are available in the reproducibility repository ( https://github.com/nitzanlab/Annotatability_notebooks ) and for two additional manuscript which are not included in the manuscript: [tutorial1](https://github.com/nitzanlab/Annotatability_notebooks/blob/main/tutorial_retina.ipynb) (runtime of a few minutes with GPU, ~20 minutes without GPU)- finding erroneous annotations and intermediate cell states in retina bipolar cells, or [tutorial2](https://github.com/nitzanlab/Annotatability_notebooks/blob/main/tutorial_covid.ipynb)  - analysis of case-control dataset of COVID-19. <br />
+Our code is based on [Scanpy](https://scanpy.readthedocs.io/en/stable/) package, but it can be easily adapted for any Python-based single-cell data analysis. Annotatability comprises two code files:<br /> models.py, which encompasses the training of neural network functions and the generation of the trainability-aware graph.<br />
 metrics.py, which contains the scoring functions.<br />
 <b>Imports</b>:<br />
 ```

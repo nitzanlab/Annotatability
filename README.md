@@ -6,8 +6,9 @@ Annotatability can be used to audit and rectify erroneous cell annotations, iden
 
 <!-- Manuscript -->
 ## Manuscript
-[Preprint](https://www.biorxiv.org/content/10.1101/2024.04.06.588373v1)
-Karin, J., Mintz, R., Raveh, B. and Nitzan, M., 2024. Interpreting single-cell and spatial omics data using deep networks training dynamics. bioRxiv, 2024-04. Nature Computational Science, Accepted.
+Karin, J., Mintz, R., Raveh, B. et al. Interpreting single-cell and spatial omics data using deep neural network training dynamics. Nat Comput Sci (2024). https://doi.org/10.1038/s43588-024-00721-5
+
+
 
 <!-- Reproducibility -->
 ## Reproducibility

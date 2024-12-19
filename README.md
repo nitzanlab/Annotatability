@@ -81,6 +81,7 @@ adata_ranked.var['conf_score_low'] %annotation-trainability negative association
 
 <b> Trainability-aware graph embedding</b> 
 ```
+import scipy.sparse as sp
 connectivities_graph , distance_graph  = metrics.make_conf_graph(adata.copy(), alpha=0.9 , k=15)
 adata.obsp['connectivities']=sp.csr_matrix(connectivities_graph)
 ```

@@ -42,8 +42,8 @@ We take as input annotated data (of type Anndata) named “adata”, and the ann
 To estimate the confidence and variability of the annotation of each cell, we  use the following commands:
 ```
 epoch_num=50 %Can be changed
-prob_list = models.follow_training_dyn_neural_net(adata, label_key='label',iterNum=epoch_num)
-all_conf , all_var = models.probability_list_to_confidence_and_var(prob_list, n_obs= adata.n_obs, epoch_num=epoch_num, device=device)
+prob_list = models.follow_training_dyn_neural_net(adata, label_key='label',iterNum=epoch_num, device=device)
+all_conf , all_var = models.probability_list_to_confidence_and_var(prob_list, n_obs= adata.n_obs, epoch_num=epoch_num)
 adata.obs["var"] = all_var.detach().numpy()
 adata.obs["conf"] = all_conf.detach().numpy()
 ```
